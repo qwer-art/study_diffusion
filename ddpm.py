@@ -110,30 +110,30 @@ def test_add_noise():
     x = x.to(device)
     ddpm = DDPM(device, n_steps)
 
-    percent = 0.33
-    t = torch.tensor([int(n_steps * percent)])
-    t = t.unsqueeze(1)
+    percents = torch.linspace(0, 0.99, 10)
+    for percent in percents:
+        t = torch.tensor([int(n_steps * percent)])
+        t = t.unsqueeze(1)
 
-    x_t = ddpm.sample_forward(x, t)
+        x_t = ddpm.sample_forward(x, t)
 
-    n, c, h, w = x.shape
-    ## n,c,2h,w
-    cx = torch.cat((x, x_t), dim=2)
-    ## n,2h,w
-    cx = cx.squeeze()
-    ## n,w,2h
-    cx = cx.permute(1, 0, 2)
-    ## nw,2h
-    cx = cx.flatten(1, 2)
-    cx = cx.cpu().numpy()
-    print(f"cx: {cx.shape}")
+        n, c, h, w = x.shape
+        ## n,c,2h,w
+        cx = torch.cat((x, x_t), dim=2)
+        ## n,2h,w
+        cx = cx.squeeze()
+        ## n,w,2h
+        cx = cx.permute(1, 0, 2)
+        ## nw,2h
+        cx = cx.flatten(1, 2)
+        cx = cx.cpu().numpy()
 
-    image_name = "diffusion_add_noise"
-    image_path = f'workdirs/{image_name}.jpg'
-    ### (2h,nw)
-    plt.imshow(cx)
-    plt.axis('off')
-    plt.savefig(image_path)
+        image_name = "diffusion_add_noise_" + str(int(n_steps * percent))
+        image_path = f'workdirs/{image_name}.jpg'
+        ### (2h,nw)
+        plt.imshow(cx)
+        plt.axis('off')
+        plt.savefig(image_path)
 
 def main():
     # visualize_forward()
