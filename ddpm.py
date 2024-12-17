@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import torch
 import cv2
 import einops
@@ -99,11 +100,44 @@ def visualize_forward():
     res = (res.clip(-1, 1) + 1) / 2 * 255
     res = res.cpu().numpy().astype(np.uint8)
 
-    cv2.imwrite('workdirs/diffusion_forward_first_5.jpg', res)
+    # cv2.imwrite('workdirs/diffusion_forward_first_5.jpg', res)
+
+def test_add_noise():
+    n_steps = 100
+    device = 'cuda'
+    dataloader = get_definite_dataloader(5)
+    x, _ = next(iter(dataloader))
+    x = x.to(device)
+    ddpm = DDPM(device, n_steps)
+
+    percent = 0.33
+    t = torch.tensor([int(n_steps * percent)])
+    t = t.unsqueeze(1)
+
+    x_t = ddpm.sample_forward(x, t)
+
+    n, c, h, w = x.shape
+    ## n,c,2h,w
+    cx = torch.cat((x, x_t), dim=2)
+    ## n,2h,w
+    cx = cx.squeeze()
+    ## n,w,2h
+    cx = cx.permute(1, 0, 2)
+    ## nw,2h
+    cx = cx.flatten(1, 2)
+    cx = cx.cpu().numpy()
+    print(f"cx: {cx.shape}")
+
+    image_name = "diffusion_add_noise"
+    image_path = f'workdirs/{image_name}.jpg'
+    ### (2h,nw)
+    plt.imshow(cx)
+    plt.axis('off')
+    plt.savefig(image_path)
 
 def main():
-    visualize_forward()
-
+    # visualize_forward()
+    test_add_noise()
 
 if __name__ == '__main__':
     main()
