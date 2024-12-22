@@ -1,5 +1,8 @@
 import os.path as osp
 import sys
+
+from torch.cuda import device
+
 sys.path.append(osp.dirname(osp.dirname(osp.abspath(__file__))))
 from ddpm.network import *
 from ddpm.dataset import get_definite_dataloader
@@ -12,7 +15,20 @@ configs = [
     unet_res_cfg
 ]
 
+def show_network(model,x,t):
+    ## tensorboard --logdir="./run/version1"
+    writer = SummaryWriter(log_dir="./run/version1")
+    writer.add_graph(model, (x, t))
+    writer.close()
+
+def debug_model(model,x,t):
+    eps = torch.randn_like(x).to(device)
+    x_t = ddpm.sample_forward(x, t, eps)
+    print(f"x: {x.shape},t: {t.shape},x_t: {x_t.shape}")
+
+
 if __name__ == '__main__':
+    device = "cuda"
     ### dataset
     batch_size = 4
     dataloader = get_definite_dataloader(batch_size)
@@ -21,15 +37,19 @@ if __name__ == '__main__':
     config_id = 4
     model_path = 'model_unet_res.pth'
     config = configs[config_id]
-    net = build_network(config, n_steps)
+    model = build_network(config, n_steps)
+    model = model.to(device)
     ### ddpm
-    device = "cuda"
     ddpm = DDPM(device, n_steps)
     ### writer
     ## 可视化网络结构
-    writer = SummaryWriter(log_dir="../run/version1")
     data_iter = iter(dataloader)
-    images,labels = next(data_iter)
-    print(f"images: {images.shape},labels: {labels.shape}")
-
-
+    # x
+    x, _ = next(data_iter)
+    x = x.to(device)
+    # t
+    current_batch_size = x.shape[0]
+    t = torch.randint(0, n_steps, (current_batch_size,)).to(device)
+    # visual
+    # show_network(model, x, t)
+    debug_model(model, x, t)
