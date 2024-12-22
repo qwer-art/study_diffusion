@@ -25,7 +25,11 @@ def debug_model(model,x,t):
     eps = torch.randn_like(x).to(device)
     x_t = ddpm.sample_forward(x, t, eps)
     print(f"x: {x.shape},t: {t.shape},x_t: {x_t.shape}")
-
+    eps_theta = model(x_t, t.reshape(current_batch_size, 1))
+    print(f"eps_theta: {eps_theta.shape}")
+    loss_fn = nn.MSELoss()
+    loss = loss_fn(eps_theta, eps)
+    print(f"loss: {loss}")
 
 if __name__ == '__main__':
     device = "cuda"
