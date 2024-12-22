@@ -3,8 +3,8 @@ import torch
 import cv2
 import einops
 import numpy as np
-from dataset import get_dataloader
-from dataset import get_definite_dataloader
+from ddpm.dataset import get_dataloader
+from ddpm.dataset import get_definite_dataloader
 
 class DDPM():
 
