@@ -3,7 +3,7 @@ import sys
 sys.path.append(osp.dirname(osp.dirname(osp.abspath(__file__))))
 from ddpm.network import *
 from ddpm.dataset import get_definite_dataloader
-from ddpm.ddpm import DDPM
+from ddpm.ddpm_model import DDPM
 from torch.utils.tensorboard import SummaryWriter
 import netron
 

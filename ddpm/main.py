@@ -57,7 +57,7 @@ def sample_imgs(ddpm,
     net = net.to(device)
     net = net.eval()
     with torch.no_grad():
-        shape = (n_sample, *get_img_shape())  # 1, 3, 28, 28
+        shape = (n_sample, *get_img_shape())  # 81,1, 28, 28
         imgs = ddpm.sample_backward(shape,
                                     net,
                                     device=device,
@@ -84,13 +84,13 @@ if __name__ == '__main__':
     n_steps = 1000
     config_id = 4
     device = 'cuda'
-    model_path = 'model_unet_res.pth'
+    model_path = 'model_param/model_unet_res.pth'
 
     config = configs[config_id]
     net = build_network(config, n_steps)
     ddpm = DDPM(device, n_steps)
 
-    train(ddpm, net, device=device, ckpt_path=model_path)
+    # train(ddpm, net, device=device, ckpt_path=model_path)
 
     net.load_state_dict(torch.load(model_path))
     sample_imgs(ddpm, net, 'work_dirs/diffusion.jpg', device=device)

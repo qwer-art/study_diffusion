@@ -1,9 +1,12 @@
+import os.path as osp
+import sys
+sys.path.append(osp.dirname(osp.dirname(osp.abspath(__file__))))
+
 import matplotlib.pyplot as plt
 import torch
 import cv2
 import einops
 import numpy as np
-from ddpm.dataset import get_dataloader
 from ddpm.dataset import get_definite_dataloader
 
 class DDPM():
