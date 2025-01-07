@@ -9,6 +9,30 @@ import einops
 import numpy as np
 from ddpm.dataset import get_definite_dataloader
 
+def tensor_to_image(imgs_tensor):
+    if (3 == len(imgs_tensor.shape) and 3 == imgs_tensor.shape[0]):
+        imgs_tensor = einops.rearrange(imgs_tensor, 'c h w -> h w c')
+    elif (3 == len(imgs_tensor.shape) and 3 != imgs_tensor.shape[0]):
+        imgs_tensor = imgs_tensor.unsqueeze(1)  # 通过 unsqueeze 扩展成 (12, 1, 28, 28)
+        imgs_tensor = imgs_tensor.expand(-1, 3, -1, -1)
+        n = imgs_tensor.shape[0]
+        b1 = int(n ** 0.5)
+        b2 = n // b1
+        imgs_tensor = einops.rearrange(imgs_tensor, '(b1 b2) c h w -> (b1 h) (b2 w) c', b1=b1, b2=b2)
+    elif (4 == len(imgs_tensor.shape)):
+        n = imgs_tensor.shape[0]
+        b1 = int(n ** 0.5)
+        b2 = n // b1
+        imgs_tensor = einops.rearrange(imgs_tensor, '(b1 b2) c h w -> (b1 h) (b2 w) c', b1=b1, b2=b2)
+    else:
+        print(f"[ Fail ],shape_size: {imgs_tensor.shape}")
+
+    imgs_tensor = (imgs_tensor + 1) / 2 * 255
+    imgs_tensor = imgs_tensor.clamp(0, 255)
+    imgs_tensor = imgs_tensor.numpy().astype(np.uint8)
+    return imgs_tensor
+
+
 class DDPM():
 
     def __init__(self,
@@ -39,6 +63,36 @@ class DDPM():
             eps = torch.randn_like(x)
         res = eps * torch.sqrt(1 - alpha_bar) + torch.sqrt(alpha_bar) * x
         return res
+
+    def debug_backward_300(self,roi_steps,x,net,device):
+        simple_var = True,
+        clip_x0 = True
+        net = net.to(device)
+        x = x.to(device)
+        for t in range(roi_steps - 1, -1, -1):
+            with torch.no_grad():
+                x = self.sample_backward_step(x, t, net, simple_var, clip_x0)
+                if (0 == (t % 30)):
+                    image_path = f"image/backward_300/{t}.jpg"
+                    image = tensor_to_image(x.detach().cpu())
+                    cv2.imwrite(image_path,image)
+                torch.cuda.empty_cache()
+        return x
+
+    def debug_backward(self,x,net,device):
+        simple_var = True,
+        clip_x0 = True
+        net = net.to(device)
+        x = x.to(device)
+        for t in range(self.n_steps - 1, -1, -1):
+            with torch.no_grad():
+                x = self.sample_backward_step(x, t, net, simple_var, clip_x0)
+                if (0 == (t % 100)):
+                    image_path = f"image/backward/{t}.jpg"
+                    image = tensor_to_image(x.detach().cpu())
+                    cv2.imwrite(image_path,image)
+                torch.cuda.empty_cache()
+        return x
 
     def sample_backward(self,
                         img_shape,
