@@ -1,5 +1,9 @@
 .idea/
+.vscode/
 data
 model_param
 run
+debug_output/
+image/
+work_dirs/
 *.pyc
